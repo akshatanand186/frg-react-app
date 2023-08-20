@@ -91,7 +91,7 @@ const ImageList = () => {
           value={userId}
           onChange={onUserIdChangeHandler}
         />
-        <label htmlFor="query">Enter query</label>
+        <label htmlFor="query">Enter Search Query</label>
         <input
           id="query"
           type="text"
@@ -99,7 +99,7 @@ const ImageList = () => {
           onChange={onQueryChangeHandler}
         />
         {/* <Button onClick={() => handler(userId, query)}> Try this</Button> */}
-        <Button onClick={() => postRequest(userId, query)}> Aur Bhayi </Button>
+        <Button onClick={() => postRequest(userId, query)}> Find Match </Button>
 
         <div className={classes.imagegallery}>
           {currentItems.map((data, index) => (
