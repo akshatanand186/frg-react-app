@@ -5,15 +5,25 @@ import Card from "./Card";
 import classes from "./ImageList.module.css";
 // import "./ImageLists.css";
 
+const itemsPerPage = 16;
 const ImageList = () => {
   const [imageData, setImageData] = useState([]);
-  const [apiId, setApiID] = useState("");
-  const handler = (slashID) => {
+  const [userId, setUserId] = useState("");
+  const [query, setQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = imageData.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(imageData.length / itemsPerPage);
+
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+  };
+
+  const handler = (slashID, query) => {
     axios
       .get(`http://localhost:5000/fashion/${slashID}`)
       .then((response) => {
-        // console.log("Okay");
-        // console.log("result, ", response.data.link);
         setImageData((prevval) => [
           ...prevval,
           {
@@ -27,24 +37,72 @@ const ImageList = () => {
         console.log(error);
       });
   };
-  const onChangeHandler = (event) => {
-    setApiID(event.target.value);
+  const postRequest = (usernameId, query) => {
+    axios
+      .post(
+        "http://localhost:5000/query",
+        {
+          username: usernameId,
+          query_str: query,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      )
+      .then((res) => {
+        const parsedResponse = res.data.map((jsonString) =>
+          JSON.parse(jsonString)
+        );
+        // console.log(parsedResponse);
+        var current = [];
+        parsedResponse.forEach((product) => {
+          current = [
+            ...current,
+            {
+              link: product.link,
+              productDisplayName: product.productDisplayName,
+            },
+          ];
+          // ... and so on for other properties ...
+        });
+        // console.log("current: ", current);
+        setImageData(current);
+      })
+      .catch((err) => {
+        console.log(err.message);
+      });
+  };
+  const onUserIdChangeHandler = (event) => {
+    setUserId(event.target.value);
+  };
+  const onQueryChangeHandler = (event) => {
+    setQuery(event.target.value);
   };
   // useEffect((),[imageData])
   return (
     <div>
       <Card className={classes.input}>
-        <label htmlFor="uesrname"> Enter username handle</label>
+        <label htmlFor="userid"> Enter User ID</label>
         <input
-          id="username"
+          id="userid"
           type="text"
-          value={apiId}
-          onChange={onChangeHandler}
+          value={userId}
+          onChange={onUserIdChangeHandler}
         />
-        <Button onClick={() => handler(apiId)}> Try this</Button>
+        <label htmlFor="query">Enter query</label>
+        <input
+          id="query"
+          type="text"
+          value={query}
+          onChange={onQueryChangeHandler}
+        />
+        {/* <Button onClick={() => handler(userId, query)}> Try this</Button> */}
+        <Button onClick={() => postRequest(userId, query)}> Aur Bhayi </Button>
 
         <div className={classes.imagegallery}>
-          {imageData.map((data, index) => (
+          {currentItems.map((data, index) => (
             <div>
               <img
                 key={index}
@@ -54,6 +112,17 @@ const ImageList = () => {
               />
               <p>{data.productDisplayName}</p>
             </div>
+          ))}
+        </div>
+        <div className={classes.pagination}>
+          {Array.from({ length: totalPages }, (_, index) => (
+            <button
+              key={index}
+              onClick={() => handlePageChange(index + 1)}
+              className={currentPage === index + 1 ? classes.activePage : ""}
+            >
+              {index + 1}
+            </button>
           ))}
         </div>
       </Card>
